@@ -1,7 +1,6 @@
 
 
 
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -47,7 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],),
 
       body: Column(
-      
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
