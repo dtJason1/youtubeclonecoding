@@ -1,11 +1,12 @@
 
+import 'dart:convert';
 
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-
+import 'package:http/http.dart' as http;
 const double mobileWidth = 700;
 //const double breakPointWidth =1200;
 bool isWeb = true;
@@ -20,40 +21,60 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  int stack = 1;
-  int _listlen = 10;
+  List<Map<String,dynamic>> _wholeVideoList= [];
+  int _showingVideosamount = 9;
   List<String> _upperSelection = ['전체','뉴스','음악','게임','라이브','축구','자연','최근에 업로드된 동영상','라이브','축구','자연','최근에 업로드된 동영상',];
   late final ScrollController _controller;
-  bool updated = true;
-
+  bool endOfVideo = false;
+  var currentlist;
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _controller = ScrollController();
     _controller.addListener(_handleControllerNotification);
   }
 
   void _handleControllerNotification() async{
-    if(_controller.position.userScrollDirection ==
-        ScrollDirection.reverse && _controller.position.atEdge) {
+    if(_controller.position.userScrollDirection == ScrollDirection.reverse && _controller.position.atEdge) {
       await Future.delayed(Duration(seconds: 1));
-
       setState(() {
-        _listlen += 10;
+        addlist();
+        _showingVideosamount += 3;
       });
-      print(_listlen);
     }
+  }
 
+
+
+  Future<List<Map<String,dynamic>>> geturi() async{
+    List<Map<String, dynamic>> mapList = await [];
+    var url = Uri.http('10.0.1.85:8000');
+    var response = await http.get(url);
+    var getresponsetojson = jsonDecode(response.body);
+    print(getresponsetojson);
+    getresponsetojson['videos'].forEach((element) {
+      mapList.add(element);
+    });
+    //if (!endOfVideo&& _showingVideosamount<mapList.length) {endOfVideo = true;}
+    for(int i = 0; i < mapList.length; i++){
+      mapList[i]['vid_id'] = mapList[i]['vid_id'].toString();
+      mapList[i]['views'] = mapList[i]['views'].toString();
+    }
+    print(mapList);
+    return mapList;
+  }
+
+  Future<List<Map<String,dynamic>>> addlist() async{
+
+    _wholeVideoList += await geturi();
+    return _wholeVideoList;
   }
 
   @override
   Widget build(BuildContext context) {
     double pageWidth = MediaQuery.of(context).size.width;
     //isWeb = pageWidth > mobileWidth ? true : false;
-
     return Scaffold(
-
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leadingWidth: 300,
@@ -63,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
 
             IconButton(icon: Icon(Icons.menu), onPressed: (){print("drawer");},),
-            Image.asset('assets/images/YouTube-Logo.wine.png',width: 100,),
+            //Image.asset('assets/images/YouTube-Logo.wine.png',width: 100,),
 
           ],
         ),
@@ -111,25 +132,98 @@ class _MyHomePageState extends State<MyHomePage> {
               Builder(
                 builder: (context){
                   if(pageWidth < 600 ){
-                    return videoGrid(grid: 1,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                      future: addlist(),
+                      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                        if(snapshot.hasData) return videoGrid(grid: 1, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                        else if (snapshot.hasError) {
+                          return Text("${snapshot.error}");
+                        }
+
+                        else{
+                          return Text("fsd");
+                        }
+                      }
+                    );
                   }
+
                   else if (pageWidth >=600 && pageWidth <1300){
-                    return videoGrid(grid: 2,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                        future: geturi(),
+                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                          if(snapshot.hasData) return videoGrid(grid: 2, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          else{
+                            return Text("fsd");
+                          }
+                        }
+                    );
                   }
                   else if (pageWidth >=1100 && pageWidth <1500){
-                    return videoGrid(grid: 3,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                        future: geturi(),
+                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                          if(snapshot.hasData) return videoGrid(grid: 3, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          else{
+                            return Text("fsd");
+                          }
+                        }
+                    );
 
                   }
                   else if (pageWidth >=1500 && pageWidth <2400){
-                    return videoGrid(grid: 4,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                        future: geturi(),
+                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                          if(snapshot.hasData) return videoGrid(grid: 4, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          else{
+                            return Text("fsd");
+                          }
+                        }
+                    );
 
                   }
                   else if (pageWidth >=2400 && pageWidth <2800){
-                    return videoGrid(grid: 5,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                        future: geturi(),
+                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                          if(snapshot.hasData) return videoGrid(grid: 5, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          else{
+                            return Text("fsd");
+                          }
+                        }
+                    );
 
                   }
                   else {
-                    return videoGrid(grid: 6,length:  _listlen,wrapVideo:  WrapVideo("현재는 $pageWidth '송영관-오승희 사육사'의 푸바오를 쏙~ 빼닮은 쌍둥바오 육아일기🐼 #highlight#유퀴즈온더블럭 | YOU QUIZ ON THE BLOCK EP.240", "유 퀴즈 온 더 튜브",  "조회수 2만회 2시간 전"),controller: _controller);
+                    return FutureBuilder(
+                        future: geturi(),
+                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                          if(snapshot.hasData) return videoGrid(grid: 6, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          else{
+                            return Text("fsd");
+                          }
+                        }
+                    );
 
                   }
                 },
@@ -154,56 +248,67 @@ TextButton appBarBottomElevatedButton(String text){
 
 }
 
-
-Container WrapVideo(String title, String writer,String views) {
+class WrapVideo extends StatelessWidget {
+  const WrapVideo({Key? key, required this.i, required this.list}) : super(key: key);
+  final int i;
+  final List<Map<String,dynamic>> list;
+  @override
+  Widget build(BuildContext context){
   return Container(
-
     padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
     child: Column(
       children: [
-        AspectRatio(aspectRatio: 16/9 ,child: Container(decoration: BoxDecoration(color:Colors.black,borderRadius: BorderRadius.all(Radius.circular(10))),)),
+        AspectRatio(aspectRatio: 16/9 ,child: Container(child: Image.network("http://10.0.1.85:8000/thumbnail/${list[i]['vid_id']}"),clipBehavior: Clip.hardEdge,decoration: BoxDecoration(color:Colors.black,borderRadius: BorderRadius.all(Radius.circular(10))),)),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 8, 15, 0),
           child: Row(
+
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 3, 15, 0),
                 child: Container(width: 40, height: 40,decoration: BoxDecoration(color: Colors.red,borderRadius: BorderRadius.all(Radius.circular(20))),),
-              ),
+              ),//원
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis,maxLines: 2,softWrap: false,),
-                    Text(writer, style: TextStyle(fontSize: 14),),
-                    Text(views, style: TextStyle(fontSize: 14),),
+                    Text(list[i]['title'], style: TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis,maxLines: 2,softWrap: false,),
+                    Text(list[i]['vid_id'], style: TextStyle(fontSize: 14),),
+                    Text(list[i]['views'], style: TextStyle(fontSize: 14),),
                   ],
                 ),
-              ),
+              ), //Text
             ],
           ),
         ),
       ],
     ),
-    //child: Image(),
+ //child: Image(),
   );
+  }
 }
 
 class videoGrid extends StatelessWidget {
-  const videoGrid({Key? key, required this.grid, required this.length, required this.wrapVideo, required this.controller}) : super(key: key);
+  const videoGrid({Key? key, required this.grid, required this.length,required this.list, required this.controller, }) : super(key: key);
   final int grid;
   final int length;
-  final Container wrapVideo;
+  final List<Map<String,dynamic>> list;
   final ScrollController controller;
   @override
   Widget build(BuildContext context){
-    return GridView(
+    return GridView.count(
+      crossAxisCount: grid,
+        padding: EdgeInsets.zero,
+        childAspectRatio: (11/ 9),
         controller: controller,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: grid),
         children:
-        List.generate(length, (i) => wrapVideo)
+        List.generate(length, (i) {
+          print("$i <<<<<");
+
+          return WrapVideo(i: i, list: list);
+        })
+
     );
   }
 }
