@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'videoScreen.dart';
 const double mobileWidth = 700;
 //const double breakPointWidth =1200;
 bool isWeb = true;
@@ -25,7 +26,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _showingVideosamount = 9;
   List<String> _upperSelection = ['전체','뉴스','음악','게임','라이브','축구','자연','최근에 업로드된 동영상','라이브','축구','자연','최근에 업로드된 동영상',];
   late final ScrollController _controller;
-  bool endOfVideo = false;
+  bool overSeventyScrolled = false;
   var currentlist;
   @override
   void initState() {
@@ -35,12 +36,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _handleControllerNotification() async{
-    if(_controller.position.userScrollDirection == ScrollDirection.reverse && _controller.position.atEdge) {
-      await Future.delayed(Duration(seconds: 1));
+    if(_controller.position.pixels >= (_controller.position.maxScrollExtent)) {
+      overSeventyScrolled = true;
+    }
+    if(overSeventyScrolled){
       setState(() {
         addlist();
         _showingVideosamount += 3;
       });
+      overSeventyScrolled = false;
     }
   }
 
@@ -67,11 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<List<Map<String,dynamic>>> addlist() async{
 
     _wholeVideoList += await geturi();
+    print(_wholeVideoList);
     return _wholeVideoList;
   }
 
   @override
   Widget build(BuildContext context) {
+    AppBarSelection appBarSelection = AppBarSelection();
     double pageWidth = MediaQuery.of(context).size.width;
     //isWeb = pageWidth > mobileWidth ? true : false;
     return Scaffold(
@@ -122,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   //crossAxisAlignment: CrossAxisAlignment.stretch,
                   direction: Axis.horizontal,
                   spacing: 10,
-                  children: List.generate(_upperSelection.length, (index) => appBarBottomElevatedButton(_upperSelection[index])),
+                  children: List.generate(_upperSelection.length, (index) => appBarBottomElevatedButton(text: _upperSelection[index], appBarSelection: appBarSelection)),
                 ),
               ),
             ),
@@ -149,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   else if (pageWidth >=600 && pageWidth <1300){
                     return FutureBuilder(
-                        future: geturi(),
+                        future: addlist(),
                         builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                           if(snapshot.hasData) return videoGrid(grid: 2, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
                           else if (snapshot.hasError) {
@@ -164,9 +170,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   else if (pageWidth >=1100 && pageWidth <1500){
                     return FutureBuilder(
-                        future: geturi(),
+                        future: addlist(),
                         builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                          if(snapshot.hasData) return videoGrid(grid: 3, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
+                          if(snapshot.hasData) return videoGrid(grid:3, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
                           else if (snapshot.hasError) {
                             return Text("${snapshot.error}");
                           }
@@ -180,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   else if (pageWidth >=1500 && pageWidth <2400){
                     return FutureBuilder(
-                        future: geturi(),
+                        future: addlist(),
                         builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                           if(snapshot.hasData) return videoGrid(grid: 4, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
                           else if (snapshot.hasError) {
@@ -196,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   else if (pageWidth >=2400 && pageWidth <2800){
                     return FutureBuilder(
-                        future: geturi(),
+                        future: addlist(),
                         builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                           if(snapshot.hasData) return videoGrid(grid: 5, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
                           else if (snapshot.hasError) {
@@ -212,7 +218,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   else {
                     return FutureBuilder(
-                        future: geturi(),
+                        future: addlist(),
                         builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                           if(snapshot.hasData) return videoGrid(grid: 6, length: _showingVideosamount, list: snapshot.data!, controller: _controller);
                           else if (snapshot.hasError) {
@@ -238,9 +244,44 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 
-TextButton appBarBottomElevatedButton(String text){
-  return TextButton(onPressed: (){}, child: Text(text,style: TextStyle(fontSize: 15,color: Colors.black),
+class appBarBottomElevatedButton extends StatefulWidget{
+  const appBarBottomElevatedButton({Key? key, required this.text, required this.appBarSelection}) : super(key: key);
+  final String text;
+  final AppBarSelection appBarSelection;
+
+  @override
+  State<appBarBottomElevatedButton> createState() => _appBarBottomElevatedButtonState();
+}
+
+class _appBarBottomElevatedButtonState extends State<appBarBottomElevatedButton> {
+  @override
+  Widget build(BuildContext context){
+    return TextButton(onPressed: (){
+      SetState(){
+
+        widget.appBarSelection.currentapp = int.parse(widget.text);
+        print("");
+      }
+
+    }, child: Text(widget.text,style: TextStyle(fontSize: 15,color: Colors.black),
+    ),
+
+      style: ElevatedButton.styleFrom( padding: EdgeInsets.symmetric(vertical: 12.0,horizontal:8.0),
+          backgroundColor: Colors.grey, minimumSize: Size.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
+    );
+
+  }
+}
+
+TextButton appBarBottomElevatedButton3(String text, AppBarSelection appBarSelection){
+  return TextButton(onPressed: (){
+    SetState(){
+      appBarSelection.currentapp = int.parse(text);
+    }
+
+  }, child: Text(text,style: TextStyle(fontSize: 15,color: Colors.black),
   ),
+
    style: ElevatedButton.styleFrom( padding: EdgeInsets.symmetric(vertical: 12.0,horizontal:8.0),
        backgroundColor: Colors.grey, minimumSize: Size.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
   );
@@ -254,37 +295,50 @@ class WrapVideo extends StatelessWidget {
   final List<Map<String,dynamic>> list;
   @override
   Widget build(BuildContext context){
-  return Container(
-    padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
-    child: Column(
-      children: [
-        AspectRatio(aspectRatio: 16/9 ,child: Container(child: Image.network("http://10.0.1.85:8000/thumbnail/${list[i]['vid_id']}"),clipBehavior: Clip.hardEdge,decoration: BoxDecoration(color:Colors.black,borderRadius: BorderRadius.all(Radius.circular(10))),)),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 15, 0),
-          child: Row(
+  return GestureDetector(
+    onTap: (){
+      Navigator.push(context, MaterialPageRoute(builder: (context) => videoScreen(title: list[i]['title'], view: list[i]['views'])));
+      
+    },
+    child: Container(
 
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 3, 15, 0),
-                child: Container(width: 40, height: 40,decoration: BoxDecoration(color: Colors.red,borderRadius: BorderRadius.all(Radius.circular(20))),),
-              ),//원
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(list[i]['title'], style: TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis,maxLines: 2,softWrap: false,),
-                    Text(list[i]['vid_id'], style: TextStyle(fontSize: 14),),
-                    Text(list[i]['views'], style: TextStyle(fontSize: 14),),
-                  ],
-                ),
-              ), //Text
-            ],
+      child: Column(
+        children: [
+          Container(child: FutureBuilder(
+            future: getImageWidget("http://10.0.1.85:8000/thumbnail/${list[i]['vid_id']}"),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if(snapshot.hasData) return snapshot.data;
+              else {
+                return Container(color: Colors.grey,);
+              }
+            }
+          ),clipBehavior: Clip.hardEdge,decoration: BoxDecoration(color:Colors.black,borderRadius: BorderRadius.all(Radius.circular(10))),),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 15, 0),
+            child: Row(
+
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 3, 15, 0),
+                  child: Container(width: 40, height: 40,decoration: BoxDecoration(color: Colors.red,borderRadius: BorderRadius.all(Radius.circular(20))),),
+                ),//원
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(list[i]['title'], style: TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis,maxLines: 2,softWrap: false,),
+                      Text(list[i]['vid_id'], style: TextStyle(fontSize: 12),),
+                      Text(list[i]['views'], style: TextStyle(fontSize: 12),),
+                    ],
+                  ),
+                ), //Text
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
- //child: Image(),
   );
   }
 }
@@ -298,17 +352,38 @@ class videoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context){
     return GridView.count(
-      crossAxisCount: grid,
-        padding: EdgeInsets.zero,
-        childAspectRatio: (11/ 9),
+      primary: false,
+        shrinkWrap: true,
+        childAspectRatio: 1.2,
+        padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+        //crossAxisSpacing: 40.0,
+        //mainAxisSpacing: 40.0,
+        crossAxisCount: grid,
+        scrollDirection: Axis.vertical,
         controller: controller,
         children:
         List.generate(length, (i) {
-          print("$i <<<<<");
-
           return WrapVideo(i: i, list: list);
         })
 
     );
   }
 }
+
+Future<Widget> getImageWidget(String? pictureUrl) async {
+  //await Future.delayed(Duration(seconds: 1));
+  return Image.network(pictureUrl!,fit: BoxFit.cover,);
+}
+
+class AppBarSelection{
+  int currentapp = 0;
+
+  int getCurrentAppBar(){
+    return currentapp;
+  }
+
+
+
+}
+
+  
