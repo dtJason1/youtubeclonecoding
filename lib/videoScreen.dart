@@ -9,9 +9,10 @@ import 'package:flutter/widgets.dart';
 
 
 class videoScreen extends StatelessWidget{
-  const videoScreen({Key? key,required this.title, required this.view }) : super(key: key);
+  const videoScreen({Key? key,required this.title, required this.view, required this.videoID }) : super(key: key);
   final String title;
   final String view;
+  final String videoID;
   @override
   Widget build(BuildContext context){
     return Scaffold(
@@ -54,7 +55,7 @@ class videoScreen extends StatelessWidget{
           Padding(
             padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
             child: Container(
-              child: AspectRatio(aspectRatio: 16/9,child: Container(color:Colors.black),),
+              child: AspectRatio(aspectRatio: 16/9,child: Image.network("http://10.0.1.85:8000/thumbnail/${videoID}",fit: BoxFit.cover,),),
 
             ),
           ),

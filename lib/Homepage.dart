@@ -147,7 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         }
 
                         else{
-                          return Text("fsd");
+                          return Text("기다려 주세요");
                         }
                       }
                     );
@@ -297,7 +297,7 @@ class WrapVideo extends StatelessWidget {
   Widget build(BuildContext context){
   return GestureDetector(
     onTap: (){
-      Navigator.push(context, MaterialPageRoute(builder: (context) => videoScreen(title: list[i]['title'], view: list[i]['views'])));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => videoScreen(title: list[i]['title'], view: list[i]['views'], videoID: list[i]['vid_id'])));
       
     },
     child: Container(
